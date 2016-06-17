@@ -25,9 +25,9 @@ def install_dependency(dependency_name):
     return subprocess.call(
         ["tar",
          "-xzf",
-         dependency_name + "/" + dependency_name + ".tar.gz",
+         dependency_name + "/*.tar.gz",
          "-C",
-         "/usr/local"])
+         "/usr/local"], shell=True)
 
 def cmake_configure(src_dir, build_type, output_dir, cxx_compiler = None, cxxflags = None):
     os.mkdir("build")
