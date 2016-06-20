@@ -5,7 +5,9 @@ groups:
   jobs:
   - gp_xerces
   - gpos_release
+  - gpos_debug
   - orca_release
+  - orca_debug
   - gpos_publish_tag
   - orca_publish_tag
 
@@ -120,12 +122,14 @@ jobs:
   - get: gpos_src
     passed:
     - gpos_release
+    - gpos_debug
+    trigger: true
   - get: bin_gpos_release
     passed:
     - gpos_release
-    trigger: true
   - get: bin_gpos_debug
-    trigger: true
+    passed:
+    - gpos_debug
   - task: gpos_publish_tag
     file: gpos_src/concourse/publish_tag.yml
   - put: gpos_github_release
@@ -135,6 +139,7 @@ jobs:
       commitish: gpos_github_release_stage/commit.txt
       globs:
         - gpos_github_release_stage/bin_gpos_centos5_release.tar.gz
+        - gpos_github_release_stage/bin_gpos_centos5_debug.tar.gz
 
 - name: orca_publish_tag
   max_in_flight: 1
@@ -187,6 +192,19 @@ jobs:
     params:
       from: package_tarball_release/bin_gpos_release.tar.gz
 
+- name: gpos_debug
+  max_in_flight: 2
+  plan:
+  - get: gpos_src
+    trigger: true
+  - task: build_and_test_debug
+    file: gpos_src/concourse/build_centos5_debug.yml
+  - task: package_tarball_debug
+    file: gpos_src/concourse/package_tarball_centos5_debug.yml
+  - put: bin_gpos_debug
+    params:
+      from: package_tarball_debug/bin_gpos_debug.tar.gz
+
 - name: orca_release
   max_in_flight: 2
   plan:
@@ -194,7 +212,7 @@ jobs:
     trigger: true
   - get: bin_gpos_release
     passed:
-    - gpos_release
+    - gpos_publish_tag
     trigger: true
   - get: bin_xerces
     passed:
@@ -208,3 +226,23 @@ jobs:
     params:
       from: package_tarball_release/bin_orca_release.tar.gz
 
+- name: orca_debug
+  max_in_flight: 2
+  plan:
+  - get: orca_src
+    trigger: true
+  - get: bin_gpos_debug
+    passed:
+    - gpos_publish_tag
+    trigger: true
+  - get: bin_xerces
+    passed:
+    - gp_xerces
+    trigger: true
+  - task: build_and_test_debug
+    file: orca_src/concourse/build_and_test_centos5_debug.yml
+  - task: package_tarball_debug
+    file: orca_src/concourse/package_tarball_centos5_debug.yml
+  - put: bin_orca_debug
+    params:
+      from: package_tarball_debug/bin_orca_debug.tar.gz

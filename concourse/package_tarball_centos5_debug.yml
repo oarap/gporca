@@ -2,9 +2,9 @@ platform: linux
 image: docker:///yolo/orcadev#centos5
 inputs:
   - name: orca_src
-  - name: build_and_test_centos5_debug
+  - name: build_and_test_debug
 outputs:
-  - name: package_tarball_centos5_debug
+  - name: package_tarball_debug
 run:
   path: orca_src/concourse/package_tarball.bash
 params:
