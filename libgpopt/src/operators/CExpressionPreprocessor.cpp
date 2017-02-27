@@ -2228,9 +2228,14 @@ CExpressionPreprocessor::PexprPreprocess
 
 	CAutoTimer at("\n[OPT]: Expression Preprocessing Time", GPOS_FTRACE(EopttracePrintOptStats));
 
-	// (1) remove unused CTE anchors
-	CExpression *pexprNoUnusedCTEs = PexprRemoveUnusedCTEs(pmp, pexpr);
+	// (0) collapse CScalarArray with constant values to CScalarConstArray
+	CExpression *pexprConstArrayCollapseInit = CUtils::PexprCollapseConstArray(pmp, pexpr);
 	GPOS_CHECK_ABORT;
+
+	// (1) remove unused CTE anchors
+	CExpression *pexprNoUnusedCTEs = PexprRemoveUnusedCTEs(pmp, pexprConstArrayCollapseInit);
+	GPOS_CHECK_ABORT;
+	pexprConstArrayCollapseInit->Release();
 
 	// (2) remove intermediate superfluous limit
 	CExpression *pexprSimplified = PexprRemoveSuperfluousLimit(pmp, pexprNoUnusedCTEs);
@@ -2353,7 +2358,12 @@ CExpressionPreprocessor::PexprPreprocess
 	GPOS_CHECK_ABORT;
 	pexprCollapsedProjects->Release();
 
-	return pexprSubquery;
+	// (24) collapse CScalarArray with constant values to CScalarConstArray
+	CExpression *pexprConstArrayCollapseFinal = CUtils::PexprCollapseConstArray(pmp, pexprSubquery);
+	GPOS_CHECK_ABORT;
+	pexprSubquery->Release();
+
+	return pexprConstArrayCollapseFinal;
 }
 
 // EOF
