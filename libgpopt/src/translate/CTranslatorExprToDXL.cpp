@@ -6698,8 +6698,25 @@ CTranslatorExprToDXL::PdxlnArray
 									)
 						);
 
-	TranslateScalarChildren(pexpr, pdxlnArray);
+	if (0 == pexpr->UlArity())
+	{
+		DrgPconst *pConsts = pop->Pconsts();
+		const ULONG ulArity = pConsts->UlLength();
+		for (ULONG ul = 0; ul < ulArity; ul++)
+		{
+			CScalarConst *popScConst = (*pConsts)[ul];
+			IDatum *pdatum = popScConst->Pdatum();
+			CMDAccessor *pmda = COptCtxt::PoctxtFromTLS()->Pmda();
+			const IMDType *pmdtype = pmda->Pmdtype(pdatum->Pmdid());
 
+			CDXLNode *pdxlnConst = GPOS_NEW(m_pmp) CDXLNode(m_pmp, pmdtype->PdxlopScConst(m_pmp, pdatum));
+			pdxlnArray->AddChild(pdxlnConst);
+		}
+	}
+	else
+	{
+		TranslateScalarChildren(pexpr, pdxlnArray);
+	}
 	return pdxlnArray;
 }
 
