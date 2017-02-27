@@ -104,9 +104,9 @@ CConstraint::PcnstrFromScalarArrayCmp
 
 		// get comparison type
 		IMDType::ECmpType ecmpt = CUtils::Ecmpt(popScArrayCmp->PmdidOp());
-		CExpression *pexprArray = (*pexpr)[1];
+		CExpression *pexprArray = CUtils::PexprScalarArrayChild(pexpr);
 
-		const ULONG ulArity = pexprArray->UlArity();
+		const ULONG ulArity = CUtils::UlScalarArrayArity(pexprArray);
 
 		// When array size exceeds the threshold, don't expand it into a DNF
 		COptimizerConfig *poconf = COptCtxt::PoctxtFromTLS()->Poconf();
@@ -119,11 +119,11 @@ CConstraint::PcnstrFromScalarArrayCmp
 
 		DrgPcnstr *pdrgpcnstr = GPOS_NEW(pmp) DrgPcnstr(pmp);
 
+		GPOS_ASSERT(CUtils::FScalarConstArray(pexprArray) && "expecting a constant");
+
 		for (ULONG ul = 0; ul < ulArity; ul++)
 		{
-			GPOS_ASSERT(CUtils::FScalarConst((*pexprArray)[ul]) && "expecting a constant");
-
-			CScalarConst *popScConst = CScalarConst::PopConvert((*pexprArray)[ul]->Pop());
+			CScalarConst *popScConst = CUtils::PScalarArrayConstChildAt(pexprArray,ul);
 			CConstraintInterval *pci =  CConstraintInterval::PciIntervalFromColConstCmp(pmp, pcr, ecmpt, popScConst);
 			pdrgpcnstr->Append(pci);
 		}
