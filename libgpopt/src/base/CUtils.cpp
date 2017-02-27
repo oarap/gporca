@@ -731,6 +731,165 @@ CUtils::PexprScalarEqCmp
 	return PexprScalarCmp(pmp, pexprLeft, pcrRight, IMDType::EcmptEq);
 }
 
+// returns number of children or constants of it is all constants
+ULONG
+CUtils::UlScalarArrayArity
+	(
+	CExpression *pexprArray
+	)
+{
+	if (!FScalarArray(pexprArray))
+	{
+		return 0;
+	}
+
+	ULONG ulArity = pexprArray->UlArity();
+	if (0 == ulArity)
+	{
+		CScalarArray *popScalarArray = CScalarArray::PopConvert(pexprArray->Pop());
+		DrgPconst *pconsts = popScalarArray->Pconsts();
+		ulArity = pconsts->UlLength();
+	}
+	return ulArity;
+}
+
+// returns constant operator of a scalar array expression
+CScalarConst *
+CUtils::PScalarArrayConstChildAt
+	(
+	CExpression *pexprArray,
+	ULONG ul
+	)
+{
+	ULONG ulArity = pexprArray->UlArity();
+	if (0 == ulArity)
+	{
+		CScalarArray *popScalarArray = CScalarArray::PopConvert(pexprArray->Pop());
+		DrgPconst *pconsts = popScalarArray->Pconsts();
+		CScalarConst *pScalarConst = (*pconsts)[ul];
+		//pScalarConst->AddRef();
+		return pScalarConst;
+	}
+	else
+	{
+		return CScalarConst::PopConvert((*pexprArray)[ul]->Pop());
+	}
+}
+
+// returns constant expression of a scalar array expression
+CExpression *
+CUtils::PScalarArrayExprChildAt
+	(
+	IMemoryPool *pmp,
+	CExpression *pexprArray,
+	ULONG ul
+	)
+{
+	ULONG ulArity = pexprArray->UlArity();
+	if (0 == ulArity)
+	{
+		CScalarArray *popScalarArray = CScalarArray::PopConvert(pexprArray->Pop());
+		DrgPconst *pconsts = popScalarArray->Pconsts();
+		CScalarConst *pScalarConst = (*pconsts)[ul];
+		pScalarConst->AddRef();
+		return GPOS_NEW(pmp) CExpression(pmp, pScalarConst);
+	}
+	else
+	{
+		CExpression *pexprConst = (*pexprArray)[ul];
+		pexprConst->AddRef();
+		return pexprConst;
+	}
+}
+
+// returns the scalar array expression child of CScalarArrayComp
+CExpression *
+CUtils::PexprScalarArrayChild
+	(
+	CExpression *pexprScalarArrayCmp
+	)
+{
+	CExpression *pexprArray = (*pexprScalarArrayCmp)[1];
+	if(FScalarArrayCoerce(pexprArray))
+	{
+		pexprArray = (*pexprArray)[0];
+	}
+	return pexprArray;
+}
+
+// returns if the scalar array has all constant elements or children
+BOOL
+CUtils::FScalarConstArray(CExpression *pexprArray)
+{
+	const ULONG ulArity = pexprArray->UlArity();
+
+	BOOL fAllConsts = FScalarArray(pexprArray);
+	for (ULONG ul = 0; fAllConsts && ul < ulArity; ul++)
+	{
+		fAllConsts = CUtils::FScalarConst((*pexprArray)[ul]);
+	}
+
+	return fAllConsts;
+}
+
+// returns if the scalar constant array has already been collapased
+BOOL
+CUtils::FScalarArrayCollapsed(CExpression *pexprArray)
+{
+	const ULONG ulExprArity = pexprArray->UlArity();
+	const ULONG ulConstArity = UlScalarArrayArity(pexprArray);
+
+	return ulExprArity == 0 && ulConstArity > 0;
+}
+
+// If it's a scalar array of all CScalarConst, collapse it into a single
+// expression but keep the constants in the operator.
+CExpression *
+CUtils::PexprCollapseConstArray
+	(
+	IMemoryPool *pmp,
+	CExpression *pexprArray
+	)
+{
+	GPOS_ASSERT(NULL != pexprArray);
+
+	const ULONG ulArity = pexprArray->UlArity();
+
+	if (FScalarConstArray(pexprArray) &&
+		!FScalarArrayCollapsed(pexprArray))
+	{
+		DrgPconst *pdrgpconst = GPOS_NEW(pmp) DrgPconst(pmp);
+		for (ULONG ul = 0; ul < ulArity; ul++)
+		{
+			CScalarConst *popConst = CScalarConst::PopConvert((*pexprArray)[ul]->Pop());
+			popConst->AddRef();
+			pdrgpconst->Append(popConst);
+		}
+
+		CScalarArray *psArray = CScalarArray::PopConvert(pexprArray->Pop());
+		IMDId *pmdidElem = psArray->PmdidElem();
+		IMDId *pmdidArray = psArray->PmdidArray();
+		pmdidElem->AddRef();
+		pmdidArray->AddRef();
+
+		CScalarArray *pConstArray = GPOS_NEW(pmp) CScalarArray(pmp, pmdidElem, pmdidArray, psArray->FMultiDimensional(), pdrgpconst);
+		return GPOS_NEW(pmp) CExpression(pmp, pConstArray);
+	}
+
+	// process children
+	DrgPexpr *pdrgpexpr = GPOS_NEW(pmp) DrgPexpr(pmp);
+
+	for (ULONG ul = 0; ul < ulArity; ul++)
+	{
+		CExpression *pexprChild = PexprCollapseConstArray(pmp, (*pexprArray)[ul]);
+		pdrgpexpr->Append(pexprChild);
+	}
+
+	COperator *pop = pexprArray->Pop();
+	pop->AddRef();
+	return GPOS_NEW(pmp) CExpression(pmp, pop, pdrgpexpr);
+}
+
 //---------------------------------------------------------------------------
 //	@function:
 //		CUtils::PexprScalarArrayCmp
