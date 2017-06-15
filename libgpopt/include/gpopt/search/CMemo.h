@@ -148,7 +148,7 @@ namespace gpopt
 			CGroup *PgroupInsert(CGroup *pgroupTarget, CExpression *pexprOrigin, CGroupExpression *pgexpr);
 
 			// extract a plan that delivers the given required properties
-			CExpression *PexprExtractPlan(IMemoryPool *pmp, CGroup *pgroupRoot, CReqdPropPlan *prppInput, ULONG ulSearchStages);
+			CExpression *PexprExtractPlan(IMemoryPool *pmp, CGroup *pgroupRoot, CReqdPropPlan *prppInput, ULONG ulSearchStages, ULONG *ulStatus);
 
 			// merge duplicate groups
 			void GroupMerge();

@@ -1356,14 +1356,22 @@ CEngine::RecursiveOptimize()
 		poc->Release();
 
 		// extract best plan found at the end of current search stage
+        ULONG *ulStatus = GPOS_NEW(m_pmp) ULONG(0);
 		CExpression *pexprPlan =
 			m_pmemo->PexprExtractPlan
 								(
 								m_pmp,
 								m_pmemo->PgroupRoot(),
 								m_pqc->Prpp(),
-								m_pdrgpss->UlLength()
+								m_pdrgpss->UlLength(),
+                                ulStatus
 								);
+        if(*ulStatus == 1)
+        {
+            GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+        }
+        GPOS_DELETE(ulStatus);
+    
 		PssCurrent()->SetBestExpr(pexprPlan);
 
 		FinalizeSearchStage();
@@ -1747,14 +1755,23 @@ CEngine::MainThreadOptimize()
 		poc->Release();
 
 		// extract best plan found at the end of current search stage
+        ULONG *ulStatus = GPOS_NEW(m_pmp) ULONG(0);
+    
 		CExpression *pexprPlan =
 			m_pmemo->PexprExtractPlan
 								(
 								m_pmp,
 								m_pmemo->PgroupRoot(),
 								m_pqc->Prpp(),
-								m_pdrgpss->UlLength()
+								m_pdrgpss->UlLength(),
+                                ulStatus
 								);
+        if(*ulStatus == 1)
+        {
+            GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+        }
+        GPOS_DELETE(ulStatus);
+
 		PssCurrent()->SetBestExpr(pexprPlan);
 
 		FinalizeSearchStage();
@@ -1849,14 +1866,22 @@ CEngine::MultiThreadedOptimize
 		poc->Release();
 
 		// extract best plan found at the end of current search stage
+        ULONG *ulStatus = GPOS_NEW(m_pmp) ULONG(0);
 		CExpression *pexprPlan =
 			m_pmemo->PexprExtractPlan
 								(
 								m_pmp,
 								m_pmemo->PgroupRoot(),
 								m_pqc->Prpp(),
-								m_pdrgpss->UlLength()
+								m_pdrgpss->UlLength(),
+                                ulStatus
 								);
+        if(*ulStatus == 1)
+        {
+            GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+        }
+        GPOS_DELETE(ulStatus);
+
 		PssCurrent()->SetBestExpr(pexprPlan);
 
 		FinalizeSearchStage();
@@ -1946,13 +1971,20 @@ CEngine::PexprExtractPlan()
 	}
 	else
 	{
+        ULONG *ulStatus = GPOS_NEW(m_pmp) ULONG(0);
 		pexpr = m_pmemo->PexprExtractPlan
 						(
 						m_pmp,
 						m_pmemo->PgroupRoot(),
 						m_pqc->Prpp(),
-						m_pdrgpss->UlLength()
+						m_pdrgpss->UlLength(),
+                        ulStatus
 						);
+        if(*ulStatus == 1)
+        {
+            GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+        }
+        GPOS_DELETE(ulStatus);
 	}
 
 	if (NULL == pexpr)
@@ -2083,14 +2115,22 @@ CEngine::SamplePlans()
 	}
 
 	// find cost of best plan
+    ULONG *ulStatus = GPOS_NEW(m_pmp) ULONG(0);
 	CExpression *pexpr =
 			m_pmemo->PexprExtractPlan
 				(
 				m_pmp,
 				m_pmemo->PgroupRoot(),
 				m_pqc->Prpp(),
-				m_pdrgpss->UlLength()
+				m_pdrgpss->UlLength(),
+                ulStatus
 				);
+    if(*ulStatus == 1)
+    {
+        GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+    }
+    GPOS_DELETE(ulStatus);
+
 	CCost costBest = pexpr->Cost();
 	pec->SetBestCost(costBest);
 	pexpr->Release();

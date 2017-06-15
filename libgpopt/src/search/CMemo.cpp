@@ -325,7 +325,8 @@ CMemo::PexprExtractPlan
 	IMemoryPool *pmp,
 	CGroup *pgroupRoot,
 	CReqdPropPlan *prppInput,
-	ULONG ulSearchStages
+	ULONG ulSearchStages,
+    ULONG *ulStatus
 	)
 {
 	// check stack size
@@ -366,6 +367,7 @@ CMemo::PexprExtractPlan
 	if (NULL == pgexprBest)
 	{
 		// no plan found
+        *ulStatus = 2;
 		return NULL;
 	}
 
@@ -404,7 +406,9 @@ CMemo::PexprExtractPlan
 				// generating optimization context for group 7 and its subgroup group 6,
 				// even the group 6 doesn't have scalar expression and it needs optimization.
 				// Orca doesn't support this feature yet, so falls back to planner.
-				GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+				// GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+                *ulStatus = 1;
+                return NULL;
 			}
 
 			COptimizationContext *pocChild = (*poc->PccBest()->Pdrgpoc())[i];
@@ -413,7 +417,11 @@ CMemo::PexprExtractPlan
 			prpp = pocChild->Prpp();
 		}
 
-		CExpression *pexprChild = PexprExtractPlan(pmp, pgroupChild, prpp, ulSearchStages);
+		CExpression *pexprChild = PexprExtractPlan(pmp, pgroupChild, prpp, ulSearchStages, ulStatus);
+        if(*ulStatus == 1)
+        {
+            return NULL;
+        }
 		pdrgpexpr->Append(pexprChild);
 	}
 
@@ -430,9 +438,12 @@ CMemo::PexprExtractPlan
 
 	if (pexpr->Pop()->FPhysical() && !poc->PccBest()->FValid(pmp))
 	{
-		GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
+        *ulStatus = 1;
+        return NULL;
+		// GPOS_RAISE(gpopt::ExmaGPOPT, gpopt::ExmiUnsatisfiedRequiredProperties);
 	}
 
+    *ulStatus = 3;
 	return pexpr;
 }
 
