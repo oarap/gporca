@@ -423,9 +423,6 @@ CMDTypeGenericGPDB::CreateDXLDatumVal
 			return CMDTypeGenericGPDB::CreateDXLDatumStatsDoubleMappable(mp, mdid, type_modifier, is_passed_by_value, is_null, pba,
 																	length, lValue, dValue);
 		// has lint mapping
-		case GPDB_CHAR:
-		case GPDB_VARCHAR:
-		case GPDB_TEXT:
 		case GPDB_CASH:
 			return CMDTypeGenericGPDB::CreateDXLDatumStatsIntMappable(mp, mdid, type_modifier, is_passed_by_value, is_null, pba, length, lValue, dValue);
 		// time-related types
@@ -438,6 +435,9 @@ CMDTypeGenericGPDB::CreateDXLDatumVal
 		case GPDB_RELTIME:
 		case GPDB_INTERVAL:
 		case GPDB_TIMEINTERVAL:
+		case GPDB_CHAR:
+		case GPDB_VARCHAR:
+		case GPDB_TEXT:
 			return CMDTypeGenericGPDB::CreateDXLDatumStatsDoubleMappable(mp, mdid, type_modifier, is_passed_by_value, is_null, pba,
 																	length, lValue, dValue);
 		// network-related types
@@ -559,10 +559,7 @@ CMDTypeGenericGPDB::HasByte2IntMapping
 	const IMDId *mdid
 	)
 {
-	return mdid->Equals(&CMDIdGPDB::m_mdid_bpchar)
-			|| mdid->Equals(&CMDIdGPDB::m_mdid_varchar)
-			|| mdid->Equals(&CMDIdGPDB::m_mdid_text)
-			|| mdid->Equals(&CMDIdGPDB::m_mdid_cash);
+	return mdid->Equals(&CMDIdGPDB::m_mdid_cash);
 }
 
 //---------------------------------------------------------------------------
@@ -582,6 +579,9 @@ CMDTypeGenericGPDB::HasByte2DoubleMapping
 	return mdid->Equals(&CMDIdGPDB::m_mdid_numeric)
 			|| mdid->Equals(&CMDIdGPDB::m_mdid_float4)
 			|| mdid->Equals(&CMDIdGPDB::m_mdid_float8)
+			|| mdid->Equals(&CMDIdGPDB::m_mdid_bpchar)
+			|| mdid->Equals(&CMDIdGPDB::m_mdid_varchar)
+			|| mdid->Equals(&CMDIdGPDB::m_mdid_text)
 			|| IsTimeRelatedType(mdid)
 			|| IsNetworkRelatedType(mdid);
 }
@@ -626,6 +626,19 @@ CMDTypeGenericGPDB::IsNetworkRelatedType
 	return mdid->Equals(&CMDIdGPDB::m_mdid_inet)
 			|| mdid->Equals(&CMDIdGPDB::m_mdid_cidr)
 			|| mdid->Equals(&CMDIdGPDB::m_mdid_macaddr);
+}
+
+
+// is this a text-related type
+BOOL
+CMDTypeGenericGPDB::IsTextRelatedType
+	(
+	const IMDId *mdid
+	)
+{
+	return mdid->Equals(&CMDIdGPDB::m_mdid_bpchar)
+			|| mdid->Equals(&CMDIdGPDB::m_mdid_varchar)
+			|| mdid->Equals(&CMDIdGPDB::m_mdid_text);
 }
 
 #ifdef GPOS_DEBUG

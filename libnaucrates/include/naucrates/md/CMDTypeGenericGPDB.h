@@ -342,6 +342,9 @@ namespace gpmd
 			static
 			BOOL IsNetworkRelatedType(const IMDId *mdid);
 
+			// is this a text-related type
+			static
+			BOOL IsTextRelatedType(const IMDId *pmdid);
 	};
 }
 
