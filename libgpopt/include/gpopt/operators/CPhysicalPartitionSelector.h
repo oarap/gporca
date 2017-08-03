@@ -138,6 +138,11 @@ namespace gpopt
 				return m_pdrgpdrgpcr;
 			}
 
+			CPartConstraint *Ppartcnstr() const
+			{
+				return m_ppartcnstr;
+			}
+
 			// number of partitioning levels
 			virtual
 			ULONG UlPartLevels() const;

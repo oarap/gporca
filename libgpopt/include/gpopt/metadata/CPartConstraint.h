@@ -128,6 +128,11 @@ namespace gpopt
 				return m_pbsDefaultParts->FBit(ulLevel);
 			}
 
+			CBitSet *PbsDefaultParts() const
+			{
+				return m_pbsDefaultParts;
+			}
+
 			// partition keys
 			DrgDrgPcr *Pdrgpdrgpcr() const
 			{

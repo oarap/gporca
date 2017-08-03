@@ -4759,7 +4759,10 @@ CTranslatorExprToDXL::ConstructLevelFilters4PartitionSelector
 	GPOS_ASSERT(1 <= ulPartLevels);
 
 	DrgDrgPcr *pdrgpdrgpcrPartKeys = popSelector->Pdrgpdrgpcr();
-	CBitSet *pbsDefaultParts = CUtils::Pbs(m_pmp, m_pmda->Pmdrel(popSelector->Pmdid())->Pmdpartcnstr()->PdrgpulDefaultParts());
+	//CBitSet *pbsDefaultParts = CUtils::Pbs(m_pmp, m_pmda->Pmdrel(popSelector->Pmdid())->Pmdpartcnstr()->PdrgpulDefaultParts());
+	CBitSet *pbsDefaultParts = popSelector->Ppartcnstr()->PbsDefaultParts();
+	if (NULL != pbsDefaultParts)
+		pbsDefaultParts->AddRef();
 
 	*ppdxlnFilters = GPOS_NEW(m_pmp) CDXLNode(m_pmp, GPOS_NEW(m_pmp) CDXLScalarOpList(m_pmp, CDXLScalarOpList::EdxloplistFilterList));
 	*ppdxlnEqFilters = GPOS_NEW(m_pmp) CDXLNode(m_pmp, GPOS_NEW(m_pmp) CDXLScalarOpList(m_pmp, CDXLScalarOpList::EdxloplistEqFilterList));
@@ -4772,7 +4775,7 @@ CTranslatorExprToDXL::ConstructLevelFilters4PartitionSelector
 		BOOL fRangePart = IMDRelation::ErelpartitionRange == szPartType;
 
 		CDXLNode *pdxlnFilter = NULL;
-		BOOL fDefaultPartition = pbsDefaultParts->FBit(ulLevel);
+		BOOL fDefaultPartition = (NULL != pbsDefaultParts) ? pbsDefaultParts->FBit(ulLevel) : true;
 
 		BOOL fLTComparison = false;
 		BOOL fGTComparison = false;
@@ -4875,7 +4878,8 @@ CTranslatorExprToDXL::ConstructLevelFilters4PartitionSelector
 		(*ppdxlnEqFilters)->AddChild(CTranslatorExprToDXLUtils::PdxlnBoolConst(m_pmp, m_pmda, true /*fVal*/));
 	}
 
-	pbsDefaultParts->Release();
+	if (NULL != pbsDefaultParts)
+		pbsDefaultParts->Release();
 }
 
 //---------------------------------------------------------------------------
