@@ -2064,10 +2064,23 @@ CExpressionPreprocessor::PexprExistWithPredFromINSubq
 
 	COperator *pop = pexpr->Pop();
 
+	// recursively process children
+	const ULONG ulArity = pexpr->UlArity();
+	pop->AddRef();
+
+	DrgPexpr *pdrgpexprChildren = GPOS_NEW(pmp) DrgPexpr(pmp);
+	for (ULONG ul = 0; ul < ulArity; ul++)
+	{
+		CExpression *pexprChild = PexprExistWithPredFromINSubq(pmp, (*pexpr)[ul]);
+		pdrgpexprChildren->Append(pexprChild);
+	}
+
+	CExpression *pexprNew = GPOS_NEW(pmp) CExpression(pmp, pop, pdrgpexprChildren);
+
 	//Check if the inner is a SubqueryAny
 	if (CUtils::FAnySubquery(pop))
 	{
-		CExpression *pexprLogicalProject = (*pexpr)[0];
+		CExpression *pexprLogicalProject = (*pexprNew)[0];
 
 		// we do the conversion if the project list has an outer reference and
 		// it does not include any column from the relational child.
@@ -2075,23 +2088,15 @@ CExpressionPreprocessor::PexprExistWithPredFromINSubq
 			!CUtils::FHasOuterRefs(pexprLogicalProject) ||
 			CUtils::FInnerRefInProjectList(pexprLogicalProject))
 		{
-			pexpr->AddRef();
-			return pexpr;
+			return pexprNew;
 		}
 
-		return ConvertInToSimpleExists(pmp, pexpr);
+		CExpression *pexprNewConverted = ConvertInToSimpleExists(pmp, pexprNew);
+		pexprNew->Release();
+		return pexprNewConverted;
 	}
 
-	// recursively process children
-	const ULONG ulArity = pexpr->UlArity();
-	DrgPexpr *pdrgpexprChildren = GPOS_NEW(pmp) DrgPexpr(pmp);
-	for (ULONG ul = 0; ul < ulArity; ul++)
-	{
-		CExpression *pexprChild = PexprExistWithPredFromINSubq(pmp, (*pexpr)[ul]);
-		pdrgpexprChildren->Append(pexprChild);
-	}
-	pop->AddRef();
-	return GPOS_NEW(pmp) CExpression(pmp, pop, pdrgpexprChildren);
+	return pexprNew;
 }
 
 // main driver, pre-processing of input logical expression

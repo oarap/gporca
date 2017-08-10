@@ -147,6 +147,7 @@ const CHAR *rgszFileNames[] =
 		"../data/dxl/minidump/SubqAll-Limit1.mdp",
 		"../data/dxl/minidump/ProjectUnderSubq.mdp",
 		"../data/dxl/minidump/MultiInSubqWithPrjListOuterRefNoInnerRef.mdp",
+		"../data/dxl/minidump/NestedInSubqWithPrjListOuterRefNoInnerRef.mdp",
 #ifndef GPOS_DEBUG
 		"../data/dxl/minidump/TPCDS-39-InnerJoin-JoinEstimate.mdp",
 		"../data/dxl/minidump/TPCH-Partitioned-256GB.mdp",
