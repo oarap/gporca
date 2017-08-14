@@ -2010,17 +2010,21 @@ CExpressionPreprocessor::ConvertInToSimpleExists
 
 	GPOS_ASSERT(COperator::EopLogicalProject == pexprLogicalProject->Pop()->Eopid());
 
+	// generate scalarOp expression by using column referance of the IN subquery's inner
+	// child's column referance as well as the expression extracted above from the
+	// project element
+	CExpression *pexprLeft = (*pexpr)[1];
+	if (COperator::EopScalarIdent != pexprLeft->Pop()->Eopid())
+	{
+		return NULL;
+	}
+
 	// since Orca doesn't support IN subqueries of multiple columns such as
 	// (a,a) in (select foo.a, foo.a from ...) ,
 	// we only extract the first expression under the first project element in the
 	// project list and make it as the right operand to the scalar operation.
 	CExpression *pexprRight = CUtils::PNthProjectElementExpr(pexprLogicalProject, 0);
 	pexprRight->AddRef();
-
-	// generate scalarOp expression by using column referance of the IN subquery's inner
-	// child's column referance as well as the expression extracted above from the
-	// project element
-	CExpression *pexprLeft = (*pexpr)[1];
 
 	CMDAccessor *pmda = COptCtxt::PoctxtFromTLS()->Pmda();
 	IMDId *pmdid = CScalarSubqueryAny::PopConvert(pop)->PmdidOp();
@@ -2092,6 +2096,11 @@ CExpressionPreprocessor::PexprExistWithPredFromINSubq
 		}
 
 		CExpression *pexprNewConverted = ConvertInToSimpleExists(pmp, pexprNew);
+		if (NULL == pexprNewConverted)
+		{
+			return pexprNew;
+		}
+
 		pexprNew->Release();
 		return pexprNewConverted;
 	}
