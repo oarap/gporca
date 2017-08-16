@@ -2014,7 +2014,8 @@ CExpressionPreprocessor::ConvertInToSimpleExists
 	// child's column referance as well as the expression extracted above from the
 	// project element
 	CExpression *pexprLeft = (*pexpr)[1];
-	if (COperator::EopScalarIdent != pexprLeft->Pop()->Eopid())
+
+	if (CUtils::FSubquery(pexprLeft->Pop()))
 	{
 		return NULL;
 	}
@@ -2024,17 +2025,16 @@ CExpressionPreprocessor::ConvertInToSimpleExists
 	// we only extract the first expression under the first project element in the
 	// project list and make it as the right operand to the scalar operation.
 	CExpression *pexprRight = CUtils::PNthProjectElementExpr(pexprLogicalProject, 0);
-	pexprRight->AddRef();
 
 	CMDAccessor *pmda = COptCtxt::PoctxtFromTLS()->Pmda();
 	IMDId *pmdid = CScalarSubqueryAny::PopConvert(pop)->PmdidOp();
 	const CWStringConst *pstr = pmda->Pmdscop(pmdid)->Mdname().Pstr();
+
 	pmdid->AddRef();
+	pexprRight->AddRef();
+	pexprLeft->AddRef();
 
-	CScalarIdent *popScalarOp = CScalarIdent::PopConvert(pexprLeft->Pop());
-	const CColRef *pcrLeft = (CColRef *) popScalarOp->Pcr();
-
-	CExpression *pexprScalarOp = CUtils::PexprScalarOp(pmp, pcrLeft, pexprRight, *pstr, pmdid);
+	CExpression *pexprScalarOp = CUtils::PexprScalarCmp(pmp, pexprLeft, pexprRight, *pstr, pmdid);
 
 	// EXISTS subquery becomes the logical projects relational child.
 	CExpression *pexprSubqOfExists = (*pexprLogicalProject)[0];
