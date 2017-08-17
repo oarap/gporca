@@ -777,7 +777,7 @@ namespace gpopt
 			static
 			CExpression *PNthProjectElementExpr(CExpression *pexpr, ULONG ul);
 
-			// check if the Project list has an inner reference
+			// check if the Project list has an inner reference assuming project list has one projecet element
 			static
 			BOOL FInnerRefInProjectList(CExpression *pexpr);
 

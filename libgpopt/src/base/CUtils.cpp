@@ -5007,7 +5007,7 @@ CUtils::FGeneratePartOid
 	return fInsertSortOnParquet || fInsertSortOnRows;
 }
 
-// check if a given operator is a IN subquery
+// check if a given operator is a ANY subquery
 BOOL
 CUtils::FAnySubquery
 	(
@@ -5039,7 +5039,7 @@ CUtils::PNthProjectElementExpr(CExpression *pexpr, ULONG ul)
 	return (*(*(*pexpr)[1])[ul])[0];
 }
 
-// check if the Project list has an inner reference
+// check if the Project list has an inner reference assuming project list has one projecet element
 BOOL
 CUtils::FInnerRefInProjectList
 	(
