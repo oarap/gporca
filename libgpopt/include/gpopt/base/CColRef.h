@@ -58,7 +58,7 @@ namespace gpopt
 			// type modifier
 			const INT m_iTypeModifier;
 
-			const OID m_oidCollation;
+			OID m_oidCollation;
 
 			// name: SQL alias or artificial name
 			const CName *m_pname;
@@ -88,6 +88,8 @@ namespace gpopt
 			{
 				return m_pmdtype;
 			}
+
+			void UpdateCollation ( OID oidCollation);
 
 			// type modifier
 			INT ITypeModifier() const

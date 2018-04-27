@@ -67,6 +67,7 @@ CLogicalSetOp::CLogicalSetOp
 	GPOS_ASSERT(NULL != pdrgpcrOutput);
 	GPOS_ASSERT(NULL != pdrgpdrgpcrInput);
 
+	CommonCollation(pmp);
 	BuildColumnSets(pmp);
 }
 
@@ -149,6 +150,47 @@ CLogicalSetOp::BuildColumnSets
 		m_pdrgpcrsInput->Append(pcrsInput);
 
 		m_pcrsLocalUsed->Include(pcrsInput);
+	}
+}
+
+//---------------------------------------------------------------------------
+//	@function:
+//		CLogicalSetOp::BuildColumnSets
+//
+//	@doc:
+//		Build set representation of input/output columns for faster
+//		set operations
+//
+//---------------------------------------------------------------------------
+void
+CLogicalSetOp::CommonCollation
+(
+ IMemoryPool *
+ )
+{
+	GPOS_ASSERT(NULL != m_pdrgpcrOutput);
+	GPOS_ASSERT(NULL != m_pdrgpdrgpcrInput);
+
+	const ULONG ulOutCol = m_pdrgpcrOutput->UlLength();
+	const ULONG ulArity = m_pdrgpdrgpcrInput->UlLength();
+	for (ULONG ul = 0; ul < ulOutCol; ul++)
+	{
+		OID refCollation = (*((*m_pdrgpdrgpcrInput)[0]))[ul]->OidCollation();
+		bool fMatch = true;
+		for (ULONG ul2 = 1; ul2 < ulArity; ul2++)
+		{
+			CColRef *pcr = (*((*m_pdrgpdrgpcrInput)[ul2]))[ul];
+			if (pcr->OidCollation() != refCollation)
+			{
+				fMatch = false;
+				break;
+			}
+		}
+
+		if (!fMatch)
+		{
+			(*m_pdrgpcrOutput)[ul]->UpdateCollation(0);
+		}
 	}
 }
 

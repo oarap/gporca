@@ -46,7 +46,6 @@ CColRef::CColRef
 	GPOS_ASSERT(NULL != pname);
 }
 
-
 //---------------------------------------------------------------------------
 //	@function:
 //		CColRef::~CColRef
@@ -61,7 +60,14 @@ CColRef::~CColRef()
 	GPOS_DELETE(m_pname);
 }
 
-
+void
+CColRef::UpdateCollation
+	(
+	const OID oidCollation
+	)
+{
+	m_oidCollation = oidCollation;
+}
 //---------------------------------------------------------------------------
 //	@function:
 //		CColRef::UlHash

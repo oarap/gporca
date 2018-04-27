@@ -49,6 +49,9 @@ namespace gpopt
 			// build set representation of input/output columns for faster set operations
 			void BuildColumnSets(IMemoryPool *pmp);
 
+			// check if the all input columns matches output column collation
+			void CommonCollation(IMemoryPool *pmp);
+
 			// output equivalence classes
 			DrgPcrs *PdrgpcrsOutputEquivClasses(IMemoryPool *pmp, CExpressionHandle &exprhdl, BOOL fIntersect) const;
 
