@@ -40,14 +40,16 @@ CDXLLogicalSetOp::CDXLLogicalSetOp
 	EdxlSetOpType edxlsetoptype,
 	DrgPdxlcd *pdrgdxlcd,
 	DrgPdrgPul *pdrgpdrgpul,
-	BOOL fCastAcrossInputs
+	BOOL fCastAcrossInputs,
+	DrgPul *pdrgpulColCollations
 	)
 	:
 	CDXLLogical(pmp),
 	m_edxlsetoptype(edxlsetoptype),
 	m_pdrgpdxlcd(pdrgdxlcd),
 	m_pdrgpdrgpul(pdrgpdrgpul),
-	m_fCastAcrossInputs(fCastAcrossInputs)
+	m_fCastAcrossInputs(fCastAcrossInputs),
+	m_pdrgpulColCollations(pdrgpulColCollations)
 {
 	GPOS_ASSERT(NULL != m_pdrgpdxlcd);
 	GPOS_ASSERT(NULL != m_pdrgpdrgpul);
@@ -77,6 +79,7 @@ CDXLLogicalSetOp::~CDXLLogicalSetOp()
 {
 	m_pdrgpdxlcd->Release();
 	m_pdrgpdrgpul->Release();
+	m_pdrgpulColCollations->Release();
 }
 
 //---------------------------------------------------------------------------
@@ -152,8 +155,10 @@ CDXLLogicalSetOp::SerializeToDXL
 	// serialize the array of input colid arrays
 	CWStringDynamic *pstrInputColIds = CDXLUtils::PstrSerialize(m_pmp, m_pdrgpdrgpul);
 	pxmlser->AddAttribute(CDXLTokens::PstrToken(EdxltokenInputCols), pstrInputColIds);
+	CWStringDynamic *pstrColCollations = CDXLUtils::PstrSerialize(m_pmp, m_pdrgpulColCollations);
+	pxmlser->AddAttribute(CDXLTokens::PstrToken(EdxltokenColCollations), pstrColCollations);
 	GPOS_DELETE(pstrInputColIds);
-	
+	GPOS_DELETE(pstrColCollations);
 	pxmlser->AddAttribute(CDXLTokens::PstrToken(EdxltokenCastAcrossInputs), m_fCastAcrossInputs);
 
 	// serialize output columns

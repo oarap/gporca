@@ -43,7 +43,8 @@ CParseHandlerLogicalSetOp::CParseHandlerLogicalSetOp
 	CParseHandlerLogicalOp(pmp, pphm, pphRoot),
 	m_edxlsetop(EdxlsetopSentinel),
 	m_pdrgpdrgpulInputColIds(NULL),
-	m_fCastAcrossInputs(false)
+	m_fCastAcrossInputs(false),
+	m_pdrgpulColCollations(NULL)
 {
 }
 
@@ -94,6 +95,8 @@ CParseHandlerLogicalSetOp::StartElement
 		// parse array of input colid arrays
 		const XMLCh *xmlszInputColIds = attrs.getValue(CDXLTokens::XmlstrToken(EdxltokenInputCols));
 		m_pdrgpdrgpulInputColIds = CDXLOperatorFactory::PdrgpdrgpulFromXMLCh(m_pphm->Pmm(), xmlszInputColIds, EdxltokenInputCols, EdxltokenLogicalSetOperation);
+		const XMLCh *xmlszColCollations = attrs.getValue(CDXLTokens::XmlstrToken(EdxltokenColCollations));
+		m_pdrgpulColCollations = CDXLOperatorFactory::PdrgpulFromXMLCh(m_pphm->Pmm(), xmlszColCollations, EdxltokenColCollations, EdxltokenLogicalSetOperation);
 
 		// install column descriptor parsers
 		CParseHandlerBase *pphColDescr = CParseHandlerFactory::Pph(m_pmp, CDXLTokens::XmlstrToken(EdxltokenColumns), m_pphm, this);
@@ -199,9 +202,8 @@ CParseHandlerLogicalSetOp::EndElement
 	DrgPdxlcd *pdrgpdxlcd = pphColDescr->Pdrgpdxlcd();
 
 	pdrgpdxlcd->AddRef();
-	CDXLLogicalSetOp *pdxlop = GPOS_NEW(m_pmp) CDXLLogicalSetOp(m_pmp, edxlsetop, pdrgpdxlcd, m_pdrgpdrgpulInputColIds, m_fCastAcrossInputs);
+	CDXLLogicalSetOp *pdxlop = GPOS_NEW(m_pmp) CDXLLogicalSetOp(m_pmp, edxlsetop, pdrgpdxlcd, m_pdrgpdrgpulInputColIds, m_fCastAcrossInputs, m_pdrgpulColCollations);
 	m_pdxln = GPOS_NEW(m_pmp) CDXLNode(m_pmp, pdxlop);
-
 	for (ULONG ul = 1; ul < ulLen; ul++)
 	{
 		// add constructed logical children from child parse handlers

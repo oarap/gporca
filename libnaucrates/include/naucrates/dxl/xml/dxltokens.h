@@ -275,6 +275,7 @@ namespace gpdxl
 		EdxltokenTypeMod,
 		EdxltokenCollation,		 // result collation OID
 		EdxltokenInputCollation, // only for nodes with an input collation OID
+		EdxltokenColCollations, // List of output collation OIDs for SetOp
 		EdxltokenCoercionForm,
 		EdxltokenLocation,
 		EdxltokenElementFunc,

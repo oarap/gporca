@@ -48,6 +48,9 @@ namespace gpdxl
 			// do the columns across inputs need to be casted
 			BOOL m_fCastAcrossInputs;
 
+
+			DrgPul *m_pdrgpulColCollations;
+
 			// private copy ctor
 			CParseHandlerLogicalSetOp(const CParseHandlerLogicalSetOp &);
 

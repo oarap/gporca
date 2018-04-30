@@ -841,9 +841,12 @@ CTranslatorDXLToExpr::BuildSetOpChild
 
 		const IMDType *pmdtype = m_pmda->Pmdtype(pmdidDest);
 		INT iTypeModifier = pdxlcdOutput->ITypeModifier();
-		OID oidCollation = pdxlcdOutput->OidCollation();
+		OID oidCurrentCollation = pcr->OidCollation(); //pdxlcdOutput->OidCollation();
+		OID oidOutCollation = *(*pdxlop->PdrgpulColCollations())[ulColPos];
+		BOOL fEqualCollation = oidOutCollation == oidCurrentCollation;
 
 		BOOL fEqualTypes = IMDId::FEqualMDId(pmdidSource, pmdidDest);
+
 		BOOL fFirstChild = (0 == ulChildIndex);
 		BOOL fUnionOrUnionAll = ((EdxlsetopUnionAll == pdxlop->Edxlsetoptype()) || (EdxlsetopUnion == pdxlop->Edxlsetoptype()));
 
@@ -852,7 +855,7 @@ CTranslatorDXLToExpr::BuildSetOpChild
 			// input column is an outer reference, add a project element for input column
 
 			// add the colref to the hash map between DXL ColId and colref as they can used above the setop
-			CColRef *pcrNew = PcrCreate(pcr, pmdtype, iTypeModifier, oidCollation, fFirstChild, pdxlcdOutput->UlID());
+			CColRef *pcrNew = PcrCreate(pcr, pmdtype, iTypeModifier, oidOutCollation, fFirstChild, pdxlcdOutput->UlID());
 			(*ppdrgpcrChild)->Append(pcrNew);
 
 			CExpression *pexprChildProjElem = NULL;
@@ -879,15 +882,29 @@ CTranslatorDXLToExpr::BuildSetOpChild
 
 		if (fEqualTypes)
 		{
-			// no cast function needed, add the colref to the array of input colrefs
-			(*ppdrgpcrChild)->Append(const_cast<CColRef*>(pcr));
+			if (fEqualCollation)
+			{
+				// no cast function needed, add the colref to the array of input colrefs
+				(*ppdrgpcrChild)->Append(const_cast<CColRef*>(pcr));
+			}
+			else
+			{
+				// add the colref to the hash map between DXL ColId and colref as they can used above the setop
+				CColRef *pcrNew = PcrCreate(pcr, pmdtype, iTypeModifier, oidOutCollation, true /*fFirstChild*/, pdxlcdOutput->UlID());
+				(*ppdrgpcrChild)->Append(pcrNew);
+
+				// introduce cast expression for input column
+				CExpression *pexprChildProjElem = PexprCastPrjElem(pmdidSource, pmdidDest, pcr, pcrNew);
+				(*ppdrgpexprChildProjElems)->Append(pexprChildProjElem);
+
+			}
 			continue;
 		}
 
 		if (fUnionOrUnionAll || fFirstChild)
 		{
 			// add the colref to the hash map between DXL ColId and colref as they can used above the setop
-			CColRef *pcrNew = PcrCreate(pcr, pmdtype, iTypeModifier, oidCollation, fFirstChild, pdxlcdOutput->UlID());
+			CColRef *pcrNew = PcrCreate(pcr, pmdtype, iTypeModifier, oidOutCollation, fFirstChild, pdxlcdOutput->UlID());
 			(*ppdrgpcrChild)->Append(pcrNew);
 
 			// introduce cast expression for input column

@@ -63,6 +63,8 @@ namespace gpdxl
 			// do the columns need to be casted accross inputs
 			BOOL m_fCastAcrossInputs;
 
+			DrgPul *m_pdrgpulColCollations;
+
 		public:
 			// ctor
 			CDXLLogicalSetOp
@@ -71,7 +73,8 @@ namespace gpdxl
 				EdxlSetOpType edxlsetoptype,
 				DrgPdxlcd *pdrgdxlcd,
 				DrgPdrgPul *pdrgpdrgpul,
-				BOOL fCastAcrossInput
+				BOOL fCastAcrossInput,
+				DrgPul *pdrgpulColCollations
 				);
 
 			// dtor
@@ -94,6 +97,11 @@ namespace gpdxl
 			const DrgPdxlcd *Pdrgpdxlcd() const
 			{
 				return m_pdrgpdxlcd;
+			}
+
+			const DrgPul *PdrgpulColCollations() const
+			{
+				return m_pdrgpulColCollations;
 			}
 
 			// number of output columns
